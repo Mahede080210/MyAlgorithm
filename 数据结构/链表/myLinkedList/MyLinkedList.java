@@ -1,6 +1,10 @@
 package com.ruider.myLinkedList;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Stack;
+
+import javax.xml.stream.events.NotationDeclaration;
 
 public class MyLinkedList {
 
@@ -12,7 +16,13 @@ public class MyLinkedList {
         public Node(int data){
             this.data=data;
         }
+        
+        public int hashCode(){
+        	int FINAL=33;
+        	return data+FINAL;
+        }
     }
+    
 
     //遍历链表，找到最后的节点，新增结点
     public void addNode(Node node){
@@ -28,7 +38,7 @@ public class MyLinkedList {
 
         //从1开始，
         //可以插入到尾部或者尾结点之后，所以是length()+1
-        if(index<1||index>length()+1)
+        if(index<1||index>length(head)+1)
             return;
         Node  temp=head;
         int length=1;   //标记锁定位置
@@ -44,7 +54,7 @@ public class MyLinkedList {
 
     //删除操作
     public void deleteByIndex(int index){
-        if(index<1||index>length())
+        if(index<1||index>length(head))
             return;
         Node temp=head;
         int length=1;
@@ -71,7 +81,7 @@ public class MyLinkedList {
 
 
     //获取链表长度，遍历链表
-    public int length(){
+    public int length(Node head){
         if(head==null&&head.next==null)
             return 0;
         Node temp=head;
@@ -92,7 +102,7 @@ public class MyLinkedList {
      */
     //使用思路2
     public Node queryByIndex(int index){
-    	if(head==null||index<1||index>length())
+    	if(head==null||index<1||index>length(head))
     		return null;
     	Node slow=head;
     	Node quick=head;
@@ -307,6 +317,134 @@ public class MyLinkedList {
     	System.out.print(head.data+"-->");
     }
     
+    /*
+     * 需求：找到两个链表的第一个公共结点
+     * 思路：
+     * 1.计算两个链表的长度
+     * 2.短链表先走他们长度之差步数
+     * 3.然后两个链表一起遍历
+     * 
+     */
+    public Node findFirstCommonNode(Node pHead1,Node pHead2){
+    	if(pHead1==null||pHead2==null){
+    		return null;
+    	}
+    	
+    	int length1=length(pHead1);
+    	int length2=length(pHead2);
+    	int x=Math.abs(length1-length2);
+    	if(length1<length2){
+    		while(x-->0)
+    			pHead2=pHead2.next;
+    	}
+    	else{
+    		while(x-->0)
+    			pHead1=pHead1.next;
+    	}
+    	
+    	Node temp1=pHead1;
+    	Node temp2=pHead2;
+    	
+    	while(temp1!=null&temp2!=null){
+    		if(temp1.data==temp2.data)
+    			return temp1;
+    		temp1=temp1.next;
+    		temp2=temp2.next;		
+    	}
+    	return null;
+    }
+    
+    /**
+     * 需求：找到环链表的入口结点
+     * 思路：
+     * 		这里我们需要利用到上面第8小节的取出环的长度的方法getCycleLength，
+     * 用这个方法来获取环的长度length。拿到环的长度length之后，需要用到两个指
+     * 针变量first和second，先让second指针走length步；然后让first指针和
+     * second指针同时各走一步，当两个指针相遇时，相遇时的结点就是环的起始点。
+
+		注：为了找到环的起始点，我们需要先获取环的长度，而为了获取环的长度，
+		我们需要先判断是否有环。所以这里面其实是用到了三个方法。
+     */
+    public static Node getLoopNode(Node head){
+    	if(head==null||head.next==null)
+    		return null;
+    	
+    	int length=MyLinkedList.getLoopLength(head);     //环的长度
+    	
+    	Node first=head;
+    	Node second=head;
+    	
+    	while(length-->0&&second.next!=null){
+    		second=second.next;
+    	}
+    	
+    	while(first!=null&&second!=null){
+    		if(first.data==second.data)
+    			return first;
+    		first=first.next;
+    		second=second.next;
+    	}
+    	return null;
+    }
+    
+    /*
+     * 需求：确认环的长度
+     * 思路：
+     * 		与判断链表是否有环一样，快慢指针，快指针一次走两步，慢指针走一步，
+     * 		当重复时，也就是确定是环时，这时快指针走过的长度减去慢指针走过的长度
+     * 		就是环的长度
+     */
+    public static int getLoopLength(Node head){
+    	Node quick=head;
+    	Node slow=head;
+    	
+    	int quickSteps=0,slowSteps=0;
+    	while(quick!=null&&quick.next!=null&&slow!=null){
+    		if(slow.data==quick.data){
+    			return quickSteps-slowSteps;
+    		}
+    		quickSteps++;
+    		slowSteps++;
+    		slow=slow.next;
+    		quick=quick.next.next;
+    	}
+    	return 0;
+    }
+    
+    
+    /*
+     * 需求：删除链表中的重复元素
+     * 思路：
+     * 		使用队列容器装未重复结点，遍历链表，判断队列中是否含有该结点
+     */
+    public static Node getSingleList(Node pHead){
+    	if (pHead == null) return null;
+        Node p = pHead;
+        Node n = new Node(0);
+        Node pre = n;
+        n.next = pHead;
+        boolean flag = false;
+        while (p != null) {
+            Node q = p.next;
+            if (q == null) break;
+            if (q.data == p.data) {
+                while (q != null && q.data == p.data) {
+                    q = q.next;
+                }
+                pre.next = q;
+                p = q;
+            } else {
+                if (!flag) {
+                    n.next = p;
+                    flag = true;
+                }
+                pre = p;
+                p = q;
+            }
+        }
+        return n.next;
+    }
+    
     public static void main(String[] args){
         MyLinkedList linkedList=new MyLinkedList();
         
@@ -314,43 +452,49 @@ public class MyLinkedList {
 
         Node node1=new Node(1);
         Node node2=new Node(2);
-        
+        Node node3=new Node(2);
         Node node4=new Node(4);
         Node node5=new Node(5);
+        Node node10=new Node(4);
 
         linkedList.addNode(node1);
         linkedList.addNode(node2);
-        
+        linkedList.addNode(node3);
         linkedList.addNode(node4);
         linkedList.addNode(node5);
+        linkedList.addNode(node10);
 
-        System.out.println("链表长度>>"+linkedList.length());
+        System.out.println("链表长度>>"+linkedList.length(linkedList.head));
 
         System.out.print("打印链表>>");
         MyLinkedList.print(linkedList.head);
-        System.out.print("从尾到头打印链表>>");
-       MyLinkedList.printFromLast2(linkedList.head);
+        //System.out.print("从尾到头打印链表>>");
+        //MyLinkedList.printFromLast2(linkedList.head);
        
        
+       
+       /*
        Node node3=new Node(3);
        linkedList.insertByIndex(4, node3);
        MyLinkedList.print(linkedList.head);
        
+       */
        
-       
-       linkedList.deleteByIndex(2);
-       MyLinkedList.print(linkedList.head);
+       //linkedList.deleteByIndex(2);
+       //MyLinkedList.print(linkedList.head);
        
        System.out.println("倒数第三个结点的值为>>"+linkedList.queryByIndex(3).data);
        
        System.out.println("链表中间节点的值为>>"+linkedList.getMiddleNode().data);
        
+       MyLinkedList.print(MyLinkedList.getSingleList(linkedList.head));
        /*
        node5.next=node2;
        
        System.out.println("hasLoop ?......  "+linkedList.hasLoop());
        */
        
+       /*
        MyLinkedList.print(MyLinkedList.reverse(linkedList.head));
        
        MyLinkedList linkedList1=new MyLinkedList();
@@ -373,7 +517,7 @@ public class MyLinkedList {
        MyLinkedList newLinkdeList=new MyLinkedList();
        newLinkdeList.head=MyLinkedList.mergeTwoLinkedList(linkedList.head, linkedList1.head);
        MyLinkedList.print(newLinkdeList.head);
-       
+       */
        
     }
 
