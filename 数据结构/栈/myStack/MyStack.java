@@ -1,22 +1,21 @@
 package com.ruider.myStack;
 
-import java.io.ObjectStreamException;
 import java.util.Stack;
 
-public class MyStack {
+public class MyStack<T> {
 	
-	private int defaultSize=10;      //默认栈深度大小
+	private int capacity=10;      //默认栈深度大小
 
-	private Object[] stack;
+	private T[] stack;
 	private int depth;               //记录栈深度
 	
 	public MyStack(){
-		stack=new Object[defaultSize];
+		stack=(T[])new Object[capacity];
 		depth=0;
 	}
 	
 	public MyStack(int MAXSIZE){
-		stack=new Object[MAXSIZE];
+		stack=(T[])new Object[MAXSIZE];
 		depth=0;
 	}
 	
@@ -36,7 +35,7 @@ public class MyStack {
 	}
 	
 	//栈顶
-	public Object peek() {
+	public T peek() {
 		if(depth==0)
 			throw new RuntimeException("栈已空");
 		return stack[depth-1];
@@ -44,21 +43,36 @@ public class MyStack {
 	
 	//入栈
 	public void push(Object obj) {
-		if(depth==stack.length)
-			throw new RuntimeException("Stack has been over!");
-		stack[depth]=obj;
+		if(depth==stack.length){
+			ensureCapacity(capacity*2+1);
+		}
+		
+		stack[depth]=(T)obj;
 		depth++;
 	}
 	
 	//出栈
 	
-	public Object pop() {
+	public T pop() {
 		if(depth==0)
 			throw new RuntimeException("栈已空");
-		Object obj=stack[depth-1];
+		T t=stack[depth-1];
 		depth--;
-		return obj;
+		return t;
 	}
+	
+	//扩容，如果需要的容量大小小于现有容量，则不变；否则，扩容后复制原来的元素
+		private void ensureCapacity(int newCapacity){
+			if(newCapacity<capacity)
+				return;
+			T[] old=stack;
+			stack=(T[])new Object[newCapacity];
+			
+			//将原有数据拷贝到新的容量中
+			for(int i=0;i<depth;i++){
+				stack[i]=old[i];
+			}
+		}
 	
 	
 	/*
@@ -92,6 +106,8 @@ public class MyStack {
         }
 	    return stack.isEmpty()? true:false;
 	}
+	
+	
 	
 	public static void main(String[] args){
 		MyStack stack=new MyStack(10);
